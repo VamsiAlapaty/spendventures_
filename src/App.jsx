@@ -8,7 +8,7 @@ function App() {
   const [expenses, setExpenses] = useState([]);
 
 function fetchExpenses() {
-  fetch("http://127.0.0.1:8000/expenses")
+  fetch("https://spendventures-backend.onrender.com/expenses")
     .then(res => res.json())
     .then(data => setExpenses(data))
 }
@@ -21,7 +21,7 @@ useEffect(() => {
   async function handleSubmit() {
     const expense = { amount: parseFloat(amount), category, description, date }
   
-    const response = await fetch("http://127.0.0.1:8000/expenses", {
+    const response = await fetch("https://spendventures-backend.onrender.com/expenses", {
      method: "POST",
      headers: { "Content-Type": "application/json" },
      body: JSON.stringify(expense)
