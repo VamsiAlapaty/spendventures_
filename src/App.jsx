@@ -8,7 +8,7 @@ function App() {
   const [expenses, setExpenses] = useState([]);
 
 function fetchExpenses() {
-  fetch("https://spendventures-backend.onrender.com/expenses")
+   fetch("https://spendventures-backend.onrender.com/expenses")
     .then(res => res.json())
     .then(data => setExpenses(data))
 }
@@ -34,8 +34,17 @@ useEffect(() => {
     setCategory("")
     setDescription("")
     setDate("")    
-    fetchExpenses()
    }
+
+   async function deleteExpense(id) {
+    const responsedel = await fetch("https://spendventures-backend.onrender.com/expenses/" + id, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" }
+    })
+    
+    console.log("Response from Python:", responsedel)
+    fetchExpenses()
+  }
 
   return (
     <div>
@@ -70,11 +79,13 @@ useEffect(() => {
       />
 
       <button onClick={handleSubmit}>Add Expense</button>
+    
 
       <h2>Expenses</h2>
 {expenses.map(expense => (
   <div key={expense.id}>
-    <p>{expense.date} — {expense.category} — ${expense.amount} — {expense.description}</p>
+    <p>{expense.date} — {expense.category} — ${expense.amount} — {expense.description}- </p>
+    <button onClick={() => deleteExpense(expense.id)}>Delete</button>
   </div>
 ))}
     </div>
