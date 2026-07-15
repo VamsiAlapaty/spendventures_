@@ -33,7 +33,8 @@ useEffect(() => {
     setAmount("")
     setCategory("")
     setDescription("")
-    setDate("")    
+    setDate("")
+    fetchExpenses()
    }
 
    async function deleteExpense(id) {
