@@ -2,4 +2,4 @@ node_modules/
 backend/spendventures.db
 __pycache__/
 *.pyc
-.env
+.env    

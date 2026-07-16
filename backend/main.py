@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func
 from database import create_tables, SessionLocal, ExpenseModel
 
 
@@ -33,6 +34,13 @@ def get_expenses():
     expenses = db.query(ExpenseModel).all()
     db.close()
     return expenses
+
+@app.get("/expenses/category_totals")
+def get_category_totals():
+    db = SessionLocal()
+    results = db.query(ExpenseModel.category, func.sum(ExpenseModel.amount).label("total_amount")).group_by(ExpenseModel.category).all()
+    db.close()
+    return [{"category": row.category, "total_amount": row.total_amount} for row in results]
 
 @app.delete("/expenses/{expense_id}")
 def delete_expense(expense_id: int):

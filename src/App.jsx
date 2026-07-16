@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
   const [amount, setAmount] = useState('');
@@ -6,25 +6,35 @@ function App() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [expenses, setExpenses] = useState([]);
+  const [categoryTotals, setCategoryTotals] = useState([]);
 
-function fetchExpenses() {
-   fetch("https://spendventures-backend.onrender.com/expenses")
-    .then(res => res.json())
-    .then(data => setExpenses(data))
-}
+  const API_URL = import.meta.env.VITE_API_URL
 
-useEffect(() => {
-  fetchExpenses()
-}, [])
+  function fetchExpenses() {
+    fetch(`${API_URL}/expenses`)
+      .then(res => res.json())
+      .then(data => setExpenses(data))
+  }
+
+  function fetchCategoryTotals() {
+    fetch(`${API_URL}/expenses/category_totals`)
+      .then(res => res.json())
+      .then(data => setCategoryTotals(data))
+  }
+
+  useEffect(() => {
+    fetchExpenses()
+    fetchCategoryTotals()
+  }, [])
 
 
   async function handleSubmit() {
     const expense = { amount: parseFloat(amount), category, description, date }
-  
-    const response = await fetch("https://spendventures-backend.onrender.com/expenses", {
-     method: "POST",
-     headers: { "Content-Type": "application/json" },
-     body: JSON.stringify(expense)
+
+    const response = await fetch(`${API_URL}/expenses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(expense)
     })
 
     const data = await response.json()
@@ -35,16 +45,18 @@ useEffect(() => {
     setDescription("")
     setDate("")
     fetchExpenses()
-   }
+    fetchCategoryTotals()
+  }
 
-   async function deleteExpense(id) {
-    const responsedel = await fetch("https://spendventures-backend.onrender.com/expenses/" + id, {
+  async function deleteExpense(id) {
+    const responsedel = await fetch(`${API_URL}/expenses/${id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" }
     })
-    
+
     console.log("Response from Python:", responsedel)
     fetchExpenses()
+    fetchCategoryTotals()
   }
 
   return (
@@ -80,15 +92,20 @@ useEffect(() => {
       />
 
       <button onClick={handleSubmit}>Add Expense</button>
-    
+
 
       <h2>Expenses</h2>
-{expenses.map(expense => (
-  <div key={expense.id}>
-    <p>{expense.date} — {expense.category} — ${expense.amount} — {expense.description}- </p>
-    <button onClick={() => deleteExpense(expense.id)}>Delete</button>
-  </div>
-))}
+      {expenses.map(expense => (
+        <div key={expense.id}>
+          <p>{expense.date} — {expense.category} — ${expense.amount} — {expense.description}- </p>
+          <button onClick={() => deleteExpense(expense.id)}>Delete</button>
+        </div>
+      ))}
+
+      <h2>Category Totals</h2>
+      {categoryTotals.map((total, index) => (
+        <p key={index}>{total.category}: ${total.total_amount.toFixed(2)}</p>
+      ))}
     </div>
   )
 }
