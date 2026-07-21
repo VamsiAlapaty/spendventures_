@@ -35,6 +35,14 @@ def get_expenses():
     db.close()
     return expenses
 
+# filtered expenses by date range
+@app.get("/expenses/filter")
+def filter_expenses(start_date: str, end_date: str):
+    db = SessionLocal()
+    expenses = db.query(ExpenseModel).filter(ExpenseModel.date >= start_date, ExpenseModel.date <= end_date).all()
+    db.close()
+    return expenses
+
 @app.get("/expenses/category_totals")
 def get_category_totals():
     db = SessionLocal()
