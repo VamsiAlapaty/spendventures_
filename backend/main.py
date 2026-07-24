@@ -76,3 +76,19 @@ def add_expense(expense: Expense):
     db.refresh(db_expense)
     db.close()
     return {"message": "Expense saved", "data": expense}
+
+@app.put("/expenses/{expense_id}")
+def update_expense(expense_id: int, expense: Expense):
+    db = SessionLocal()
+    db_expense = db.query(ExpenseModel).filter(ExpenseModel.id == expense_id).first()
+    if not db_expense:
+        db.close()
+        return {"message": "Expense not found"}
+    db_expense.amount = expense.amount
+    db_expense.category = expense.category
+    db_expense.description = expense.description
+    db_expense.date = expense.date
+    db.commit()
+    db.refresh(db_expense)
+    db.close()
+    return {"message": "Expense updated", "data": expense}

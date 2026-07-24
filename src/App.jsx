@@ -7,10 +7,17 @@ function App() {
   const [date, setDate] = useState('');
   const [expenses, setExpenses] = useState([]);
   const [categoryTotals, setCategoryTotals] = useState([]);
-  const[activeTab, setActiveTab] = useState('dashboard')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filteredExpenses, setFilteredExpenses] = useState([]);
+  const [editId, setEditId] = useState(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editDate, setEditDate] = useState('');
+
+
 
   const API_URL = import.meta.env.VITE_API_URL
 
@@ -22,9 +29,9 @@ function App() {
 
   function filterExpenses() {
     if (!startDate || !endDate) {
-    alert("Please select both start and end dates")
-    return
-  }
+      alert("Please select both start and end dates")
+      return
+    }
     fetch(`${API_URL}/expenses/filter?start_date=${startDate}&end_date=${endDate}`)
       .then(res => res.json())
       .then(data => setFilteredExpenses(data))
@@ -60,6 +67,39 @@ function App() {
     setDate("")
     fetchExpenses()
     fetchCategoryTotals()
+  }
+  // Edit expense function
+  function handleeditSubmit(id) {
+    const expense = expenses.find(exp => exp.id === id);
+    if (expense) {
+      setEditAmount(expense.amount);
+      setEditCategory(expense.category);
+      setEditDescription(expense.description);
+      setEditDate(expense.date);
+      setEditId(id);
+    }
+  }
+
+  async function handleUpdate(id) {
+    const updatedExpense = {
+      amount: parseFloat(editAmount),
+      category: editCategory,
+      description: editDescription,
+      date: editDate
+    };
+
+    await fetch(`${API_URL}/expenses/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedExpense)
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Response from Python:", data);
+        setEditId(null);
+        fetchExpenses();
+        fetchCategoryTotals();
+      });
   }
 
   async function deleteExpense(id) {
@@ -107,34 +147,64 @@ function App() {
 
       <button onClick={handleSubmit}>Add Expense</button>
 
-      
-       <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
-       <button onClick={() => setActiveTab("filter")}>Filter</button> 
-       {activeTab === "dashboard" && <div><h2>Expenses</h2>
-      {expenses.map(expense => (
-        <div key={expense.id}>
-          <p>{expense.date} — {expense.category} — ${expense.amount} — {expense.description}- </p>
-          <button onClick={() => deleteExpense(expense.id)}>Delete</button>
-        </div>
-      ))}
 
-      <h2>Category Totals</h2>
-      {categoryTotals.map((total, index) => (
-        <p key={index}>{total.category}: ${total.total_amount.toFixed(2)}</p>
-      ))}</div>}
-        {activeTab === "filter" && <div>
-          <h2>Filter Expenses</h2>
-          <input type="date"  placeholder="Start Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          <input type="date" placeholder="End Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-          <button onClick={filterExpenses}>Get Expenses</button>
-          {filteredExpenses.map(expense => (
-            <div key={expense.id}>
+      <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
+      <button onClick={() => setActiveTab("filter")}>Filter</button>
+
+      {activeTab === "dashboard" && <div><h2>Expenses</h2>
+        {expenses.map(expense => (
+          <div key={expense.id}>
+            {editId === expense.id ? (
+              <div>
+                <input
+                  type="number"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                />
+                <input
+                  type="text"
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value)}
+                />
+                <input
+                  type="text"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                />
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                />
+                <button onClick={() => handleUpdate(expense.id)}>Done</button>
+                <button onClick={() => setEditId(null)}>Cancel</button>
+              </div>
+            ) : (
               <p>{expense.date} — {expense.category} — ${expense.amount} — {expense.description}</p>
-            </div>
-          ))}
-        </div>}
+            )}
+            <button onClick={() => deleteExpense(expense.id)}>Delete</button>
+            <button onClick={() => handleeditSubmit(expense.id)}>Edit</button>
+          </div>
+        ))}
 
-      
+        <h2>Category Totals</h2>
+        {categoryTotals.map((total, index) => (
+          <p key={index}>{total.category}: ${total.total_amount.toFixed(2)}</p>
+        ))}</div>}
+        
+      {activeTab === "filter" && <div>
+        <h2>Filter Expenses</h2>
+        <input type="date" placeholder="Start Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+        <input type="date" placeholder="End Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        <button onClick={filterExpenses}>Get Expenses</button>
+        {filteredExpenses.map(expense => (
+          <div key={expense.id}>
+            <p>{expense.date} — {expense.category} — ${expense.amount} — {expense.description}</p>
+          </div>
+        ))}
+      </div>}
+
+
     </div>
   )
 }
