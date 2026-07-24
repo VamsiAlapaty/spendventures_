@@ -31,7 +31,7 @@ def root():
 @app.get("/expenses")
 def get_expenses():
     db = SessionLocal()
-    expenses = db.query(ExpenseModel).all()
+    expenses = db.query(ExpenseModel).order_by(ExpenseModel.id).all()
     db.close()
     return expenses
 
@@ -39,7 +39,7 @@ def get_expenses():
 @app.get("/expenses/filter")
 def filter_expenses(start_date: str, end_date: str):
     db = SessionLocal()
-    expenses = db.query(ExpenseModel).filter(ExpenseModel.date >= start_date, ExpenseModel.date <= end_date).all()
+    expenses = db.query(ExpenseModel).filter(ExpenseModel.date >= start_date, ExpenseModel.date <= end_date).order_by(ExpenseModel.id).all()
     db.close()
     return expenses
 
