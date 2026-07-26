@@ -117,7 +117,11 @@ function App() {
     <div>
       <h1>SpendVentures</h1>
 
-      <input
+      <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
+      <button onClick={() => setActiveTab("filter")}>Filter</button>
+
+      {activeTab === "dashboard" && <div>
+              <input
         type="number"
         placeholder="Amount"
         value={amount}
@@ -146,12 +150,8 @@ function App() {
       />
 
       <button onClick={handleSubmit}>Add Expense</button>
-
-
-      <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
-      <button onClick={() => setActiveTab("filter")}>Filter</button>
-
-      {activeTab === "dashboard" && <div><h2>Expenses</h2>
+      
+        <h2>Expenses</h2>
         {expenses.map(expense => (
           <div key={expense.id}>
             {editId === expense.id ? (
