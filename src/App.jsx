@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './index.css'
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard.jsx';
 import Filter from './pages/Filter.jsx';
 
