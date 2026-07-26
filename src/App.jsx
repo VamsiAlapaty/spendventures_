@@ -140,7 +140,7 @@ function App() {
           }`}>Filter</button>
       </div>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="/dashboard" element={<Dashboard
           amount={amount} setAmount={setAmount}
           category={category} setCategory={setCategory}
