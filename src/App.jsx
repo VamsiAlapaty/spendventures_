@@ -3,7 +3,8 @@ import './index.css'
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard.jsx';
 import Filter from './pages/Filter.jsx';
-import Login from './pages/Login.jsx'
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 function App() {
@@ -177,6 +178,7 @@ function App() {
           filteredExpenses={filteredExpenses}
           filterExpenses={filterExpenses} /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </div>
   )
