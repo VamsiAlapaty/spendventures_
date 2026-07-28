@@ -3,13 +3,22 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
 from database import create_tables, SessionLocal, ExpenseModel
-
+from auth import hash_password, verify_password, create_access_token, verify_token
+from database import create_tables, SessionLocal, ExpenseModel, UserModel
 
 class Expense(BaseModel):
     amount: float
     category: str
     description: str
     date: str
+
+class UserRegister(BaseModel):
+    email: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 app = FastAPI()
 
@@ -23,6 +32,31 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     create_tables()
+
+@app.post("/register")
+def register(user: UserRegister):
+    db = SessionLocal()
+    existing_user = db.query(UserModel).filter(UserModel.email == user.email).first()
+    if existing_user:
+        db.close()
+        return {"error": "Email already registered"}
+    hashed = hash_password(user.password)
+    new_user = UserModel(email=user.email, password=hashed)
+    db.add(new_user)
+    db.commit()
+    db.close()
+    return {"message": "User registered successfully"}
+
+@app.post("/login")
+def login(user: UserLogin):
+    db = SessionLocal()
+    db_user = db.query(UserModel).filter(UserModel.email == user.email).first()
+    if not db_user or not verify_password(user.password, db_user.password):
+        db.close()
+        return {"error": "Invalid email or password"}
+    token = create_access_token({"sub": db_user.email})
+    db.close()
+    return {"access_token": token, "token_type": "bearer"}
 
 @app.get("/")
 def root():
