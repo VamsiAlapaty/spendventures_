@@ -33,19 +33,6 @@ app.add_middleware(
 def startup():
     create_tables()
 
-@app.get("/migrate")
-def migrate():
-    from sqlalchemy import text
-    db = SessionLocal()
-    try:
-        db.execute(text("ALTER TABLE expenses ADD COLUMN user_id INTEGER REFERENCES users(id)"))
-        db.commit()
-        db.close()
-        return {"message": "Migration successful"}
-    except Exception as e:
-        db.close()
-        return {"error": str(e)}
-
 @app.post("/register")
 def register(user: UserRegister):
     db = SessionLocal()
