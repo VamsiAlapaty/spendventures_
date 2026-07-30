@@ -1,9 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
 from database import create_tables, SessionLocal, ExpenseModel
-from auth import hash_password, verify_password, create_access_token, verify_token
+from auth import hash_password, verify_password, create_access_token, verify_token, get_current_user
 from database import create_tables, SessionLocal, ExpenseModel, UserModel
 
 class Expense(BaseModel):
@@ -32,6 +32,19 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     create_tables()
+
+@app.get("/migrate")
+def migrate():
+    from sqlalchemy import text
+    db = SessionLocal()
+    try:
+        db.execute(text("ALTER TABLE expenses ADD COLUMN user_id INTEGER REFERENCES users(id)"))
+        db.commit()
+        db.close()
+        return {"message": "Migration successful"}
+    except Exception as e:
+        db.close()
+        return {"error": str(e)}
 
 @app.post("/register")
 def register(user: UserRegister):
@@ -63,31 +76,36 @@ def root():
     return {"message": "SpendVentures API is running"}
 
 @app.get("/expenses")
-def get_expenses():
+def get_expenses(email: str = Depends(get_current_user)):
     db = SessionLocal()
-    expenses = db.query(ExpenseModel).order_by(ExpenseModel.id).all()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    expenses = db.query(ExpenseModel).filter(ExpenseModel.user_id == user.id).order_by(ExpenseModel.id).all()
     db.close()
     return expenses
 
 # filtered expenses by date range
 @app.get("/expenses/filter")
-def filter_expenses(start_date: str, end_date: str):
+def filter_expenses(start_date: str, end_date: str, email: str = Depends(get_current_user)):
     db = SessionLocal()
-    expenses = db.query(ExpenseModel).filter(ExpenseModel.date >= start_date, ExpenseModel.date <= end_date).order_by(ExpenseModel.id).all()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    expenses = db.query(ExpenseModel).filter(ExpenseModel.user_id == user.id, ExpenseModel.date >= start_date, ExpenseModel.date <= end_date).all()
     db.close()
     return expenses
 
+# Category totals endpoint
 @app.get("/expenses/category_totals")
-def get_category_totals():
+def get_category_totals(email: str = Depends(get_current_user)):
     db = SessionLocal()
-    results = db.query(ExpenseModel.category, func.sum(ExpenseModel.amount).label("total_amount")).group_by(ExpenseModel.category).all()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    results = db.query(ExpenseModel.category, func.sum(ExpenseModel.amount).label("total_amount")).filter(ExpenseModel.user_id == user.id).group_by(ExpenseModel.category).all()
     db.close()
     return [{"category": row.category, "total_amount": row.total_amount} for row in results]
 
 @app.delete("/expenses/{expense_id}")
-def delete_expense(expense_id: int):
+def delete_expense(expense_id: int, email: str = Depends(get_current_user)):
     db = SessionLocal()
-    expense = db.query(ExpenseModel).filter(ExpenseModel.id == expense_id).first()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    expense = db.query(ExpenseModel).filter(ExpenseModel.id == expense_id, ExpenseModel.user_id == user.id).first()
     if not expense:
         db.close()
         return {"message": "Expense not found"}
@@ -97,9 +115,11 @@ def delete_expense(expense_id: int):
     return {"message": "Expense deleted"}
 
 @app.post("/expenses")
-def add_expense(expense: Expense):
+def add_expense(expense: Expense, email: str = Depends(get_current_user)):
     db = SessionLocal()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
     db_expense = ExpenseModel(
+        user_id=user.id,
         amount=expense.amount,
         category=expense.category,
         description=expense.description,
@@ -112,9 +132,10 @@ def add_expense(expense: Expense):
     return {"message": "Expense saved", "data": expense}
 
 @app.put("/expenses/{expense_id}")
-def update_expense(expense_id: int, expense: Expense):
+def update_expense(expense_id: int, expense: Expense, email: str = Depends(get_current_user)):
     db = SessionLocal()
-    db_expense = db.query(ExpenseModel).filter(ExpenseModel.id == expense_id).first()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    db_expense = db.query(ExpenseModel).filter(ExpenseModel.id == expense_id, ExpenseModel.user_id == user.id).first()
     if not db_expense:
         db.close()
         return {"message": "Expense not found"}

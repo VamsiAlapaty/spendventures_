@@ -6,6 +6,7 @@ import Filter from './pages/Filter.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import {authHeaders} from './utils/auth'
 
 function App() {
   const [amount, setAmount] = useState('');
@@ -30,27 +31,13 @@ function App() {
   const API_URL = import.meta.env.VITE_API_URL
 
   function fetchExpenses() {
-    fetch(`${API_URL}/expenses`)
+    fetch(`${API_URL}/expenses`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => setExpenses(data))
   }
 
-  function filterExpenses() {
-    if (!startDate || !endDate) {
-      alert("Please select both start and end dates")
-      return
-    }
-    if (startDate > endDate) {
-      alert("Start date cannot be after end date")
-      return
-    }
-    fetch(`${API_URL}/expenses/filter?start_date=${startDate}&end_date=${endDate}`)
-      .then(res => res.json())
-      .then(data => setFilteredExpenses(data))
-  }
-
   function fetchCategoryTotals() {
-    fetch(`${API_URL}/expenses/category_totals`)
+    fetch(`${API_URL}/expenses/category_totals`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => setCategoryTotals(data))
   }
@@ -66,7 +53,7 @@ function App() {
 
     const response = await fetch(`${API_URL}/expenses`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify(expense)
     })
 
@@ -102,7 +89,7 @@ function App() {
 
     await fetch(`${API_URL}/expenses/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(),
       body: JSON.stringify(updatedExpense)
     })
       .then(res => res.json())
@@ -117,7 +104,7 @@ function App() {
   async function deleteExpense(id) {
     const responsedel = await fetch(`${API_URL}/expenses/${id}`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" }
+      headers: authHeaders()
     })
 
     console.log("Response from Python:", responsedel)
@@ -172,11 +159,14 @@ function App() {
           editCategory={editCategory} setEditCategory={setEditCategory}
           editDescription={editDescription} setEditDescription={setEditDescription}
           editDate={editDate} setEditDate={setEditDate} /> </ProtectedRoute>} />
-        <Route path="/filter" element={<ProtectedRoute><Filter
-          startDate={startDate} setStartDate={setStartDate}
-          endDate={endDate} setEndDate={setEndDate}
-          filteredExpenses={filteredExpenses}
-          filterExpenses={filterExpenses} /></ProtectedRoute>} />
+        <Route path="/filter" element={<ProtectedRoute>
+    <Filter
+      startDate={startDate} setStartDate={setStartDate}
+      endDate={endDate} setEndDate={setEndDate}
+      filteredExpenses={filteredExpenses}
+      setFilteredExpenses={setFilteredExpenses}
+    />
+  </ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>

@@ -1,4 +1,23 @@
+import { authHeaders } from "../utils/auth";
+
 function Filter({ startDate, setStartDate, endDate, setEndDate,filterExpenses, filteredExpenses, setFilteredExpenses }) {
+    const API_URL = import.meta.env.VITE_API_URL
+
+  function filterExpenses() {
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates")
+      return
+    }
+    if (startDate > endDate) {
+      alert("Start date cannot be after end date")
+      return
+    }
+    fetch(`${API_URL}/expenses/filter?start_date=${startDate}&end_date=${endDate}`, {
+      headers: authHeaders()
+    })
+      .then(res => res.json())
+      .then(data => setFilteredExpenses(data))
+  }
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex flex-col gap-6">

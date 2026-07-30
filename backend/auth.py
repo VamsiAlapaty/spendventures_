@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from fastapi import Header, HTTPException
+from sqlalchemy.orm import Session 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import os
@@ -27,3 +29,15 @@ def verify_token(token: str) -> dict:
         return payload
     except JWTError:
         return None
+
+def get_current_user(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    return payload.get("sub") 
