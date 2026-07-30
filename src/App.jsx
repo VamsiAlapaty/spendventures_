@@ -6,7 +6,7 @@ import Filter from './pages/Filter.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx'
-import {authHeaders} from './utils/auth'
+import { authHeaders } from './utils/auth'
 
 function App() {
   const [amount, setAmount] = useState('');
@@ -114,6 +114,8 @@ function App() {
 
   function handleLogout() {
     localStorage.removeItem('token')
+    setExpenses([])
+    setCategoryTotals([])
     navigate('/login')
   }
 
@@ -160,13 +162,13 @@ function App() {
           editDescription={editDescription} setEditDescription={setEditDescription}
           editDate={editDate} setEditDate={setEditDate} /> </ProtectedRoute>} />
         <Route path="/filter" element={<ProtectedRoute>
-    <Filter
-      startDate={startDate} setStartDate={setStartDate}
-      endDate={endDate} setEndDate={setEndDate}
-      filteredExpenses={filteredExpenses}
-      setFilteredExpenses={setFilteredExpenses}
-    />
-  </ProtectedRoute>} />
+          <Filter
+            startDate={startDate} setStartDate={setStartDate}
+            endDate={endDate} setEndDate={setEndDate}
+            filteredExpenses={filteredExpenses}
+            setFilteredExpenses={setFilteredExpenses}
+          />
+        </ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>
