@@ -29,7 +29,7 @@ function App() {
   const location = useLocation()
 
   const API_URL = import.meta.env.VITE_API_URL
-  
+
   function fetchExpenses() {
     fetch(`${API_URL}/expenses`, { headers: authHeaders() })
       .then(res => {
@@ -60,7 +60,7 @@ function App() {
       fetchExpenses()
       fetchCategoryTotals()
     }
-  }, [])
+  }, [location.pathname])
 
 
   async function handleSubmit() {
