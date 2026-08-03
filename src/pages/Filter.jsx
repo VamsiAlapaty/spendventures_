@@ -1,6 +1,12 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { authHeaders } from "../utils/auth";
 
-function Filter({ startDate, setStartDate, endDate, setEndDate,filterExpenses, filteredExpenses, setFilteredExpenses }) {
+function Filter() {
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [filteredExpenses, setFilteredExpenses] = useState([]);
+  const navigate = useNavigate();
     const API_URL = import.meta.env.VITE_API_URL
 
   function filterExpenses() {
