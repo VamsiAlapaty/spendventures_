@@ -29,22 +29,37 @@ function App() {
   const location = useLocation()
 
   const API_URL = import.meta.env.VITE_API_URL
-
+  
   function fetchExpenses() {
     fetch(`${API_URL}/expenses`, { headers: authHeaders() })
-      .then(res => res.json())
-      .then(data => setExpenses(data))
+      .then(res => {
+        if (res.status === 401) {
+          navigate('/login')
+          return []
+        }
+        return res.json()
+      })
+      .then(data => {
+        if (Array.isArray(data)) setExpenses(data)
+      })
   }
 
   function fetchCategoryTotals() {
     fetch(`${API_URL}/expenses/category_totals`, { headers: authHeaders() })
-      .then(res => res.json())
-      .then(data => setCategoryTotals(data))
+      .then(res => {
+        if (res.status === 401) return []
+        return res.json()
+      })
+      .then(data => {
+        if (Array.isArray(data)) setCategoryTotals(data)
+      })
   }
 
   useEffect(() => {
-    fetchExpenses()
-    fetchCategoryTotals()
+    if (!localStorage.getItem('token')) {
+      fetchExpenses()
+      fetchCategoryTotals()
+    }
   }, [])
 
 
