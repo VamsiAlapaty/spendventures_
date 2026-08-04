@@ -60,6 +60,11 @@ function Login() {
                             Create one
                         </span>
                     </p>
+                    <div className="mt-4 p-3 bg-slate-50 rounded border border-slate-200">
+                        <p className="text-xs text-slate-500 font-medium mb-1">Try the demo</p>
+                        <p className="text-xs text-slate-600">Email: <span className="font-medium">demo@spendventures.com</span></p>
+                        <p className="text-xs text-slate-600">Password: <span className="font-medium">demo1234</span></p>
+                    </div>
                 </div>
             </div>
         </div>
