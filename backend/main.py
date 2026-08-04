@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,6 +7,14 @@ from sqlalchemy import func
 from database import create_tables, SessionLocal, ExpenseModel
 from auth import hash_password, verify_password, create_access_token, verify_token, get_current_user
 from database import create_tables, SessionLocal, ExpenseModel, UserModel
+from anthropic import Anthropic
+from dotenv import load_dotenv
+load_dotenv()
+
+client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+class ChatMessage(BaseModel):
+    message: str
 
 class Expense(BaseModel):
     amount: float
@@ -134,3 +144,30 @@ def update_expense(expense_id: int, expense: Expense, email: str = Depends(get_c
     db.refresh(db_expense)
     db.close()
     return {"message": "Expense updated", "data": expense}
+
+@app.post("/chat")
+def chat(body: ChatMessage, email: str = Depends(get_current_user)):
+    db = SessionLocal()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    expenses = db.query(ExpenseModel).filter(ExpenseModel.user_id == user.id).all()
+    db.close()
+
+    expenses_text = "\n".join([
+        f"Date: {e.date}, Category: {e.category}, Amount: ${e.amount}, Description: {e.description}"
+        for e in expenses
+    ])
+
+    response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=1024,
+        system=f"""You are a helpful expense tracking assistant. 
+        The user has the following expenses:
+        {expenses_text}
+        
+        Answer questions about their expenses accurately and helpfully.""",
+        messages=[
+            {"role": "user", "content": body.message}
+        ]
+    )
+
+    return {"reply": response.content[0].text}

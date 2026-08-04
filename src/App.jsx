@@ -7,12 +7,13 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { authHeaders } from './utils/auth'
+import Chat from './pages/Chat.jsx';
 
 function App() {
- 
+
   const navigate = useNavigate()
   const location = useLocation()
- 
+
 
   function handleLogout() {
     localStorage.removeItem('token')
@@ -40,15 +41,22 @@ function App() {
             ? 'border-blue-700 text-blue-700'
             : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}>Filter</button>
+          <button onClick={() => navigate('/chat')} className={`px-4 py-3 font-medium text-sm border-b-2 mr-4 ${location.pathname === '/chat'
+              ? 'border-blue-700 text-blue-700'
+              : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}>Chat</button>
         </div>
       )}
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="/dashboard" element={<ProtectedRoute>
-          <Dashboard      
-        /> </ProtectedRoute>} />
+          <Dashboard
+          /> </ProtectedRoute>} />
         <Route path="/filter" element={<ProtectedRoute>
           <Filter />
+        </ProtectedRoute>} />
+        <Route path="/chat" element={<ProtectedRoute>
+          <Chat />
         </ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
