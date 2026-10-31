@@ -8,12 +8,26 @@ import Register from './pages/Register.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { authHeaders } from './utils/auth'
 import Chat from './pages/Chat.jsx';
+import Income from './pages/Income.jsx';
+import Debts from './pages/Debts.jsx';
 
 function App() {
 
   const navigate = useNavigate()
   const location = useLocation()
 
+
+  const tabs = [
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/income', label: 'Income' },
+    { path: '/debts', label: 'Debts' },
+    { path: '/filter', label: 'Filter' },
+    { path: '/chat', label: 'Chat' },
+  ]
+
+  function isActive(path) {
+    return location.pathname === path || (path === '/dashboard' && location.pathname === '/')
+  }
 
   function handleLogout() {
     localStorage.removeItem('token')
@@ -33,18 +47,12 @@ function App() {
       </nav>
       {localStorage.getItem('token') && (
         <div className="bg-white border-b border-slate-200 px-6">
-          <button onClick={() => navigate('/dashboard')} className={`px-4 py-3 font-medium text-sm border-b-2 mr-4 ${location.pathname === '/dashboard' || location.pathname === '/'
-            ? 'border-blue-700 text-blue-700'
-            : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}>Dashboard</button>
-          <button onClick={() => navigate('/filter')} className={`px-4 py-3 font-medium text-sm border-b-2 mr-4 ${location.pathname === '/filter'
-            ? 'border-blue-700 text-blue-700'
-            : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}>Filter</button>
-          <button onClick={() => navigate('/chat')} className={`px-4 py-3 font-medium text-sm border-b-2 mr-4 ${location.pathname === '/chat'
+          {tabs.map(tab => (
+            <button key={tab.path} onClick={() => navigate(tab.path)} className={`px-4 py-3 font-medium text-sm border-b-2 mr-4 ${isActive(tab.path)
               ? 'border-blue-700 text-blue-700'
               : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}>Chat</button>
+              }`}>{tab.label}</button>
+          ))}
         </div>
       )}
       <Routes>
@@ -52,6 +60,12 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute>
           <Dashboard
           /> </ProtectedRoute>} />
+        <Route path="/income" element={<ProtectedRoute>
+          <Income />
+        </ProtectedRoute>} />
+        <Route path="/debts" element={<ProtectedRoute>
+          <Debts />
+        </ProtectedRoute>} />
         <Route path="/filter" element={<ProtectedRoute>
           <Filter />
         </ProtectedRoute>} />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { authHeaders } from '../utils/auth'
 import ReactMarkdown from 'react-markdown'
 
@@ -8,6 +8,11 @@ function Chat() {
     const [loading, setLoading] = useState(false)
 
     const API_URL = import.meta.env.VITE_API_URL
+    const bottomRef = useRef(null)
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages, loading])
 
     async function sendMessage() {
         if (!input.trim()) return
@@ -21,11 +26,16 @@ function Chat() {
             const response = await fetch(`${API_URL}/chat`, {
                 method: 'POST',
                 headers: authHeaders(),
-                body: JSON.stringify({ message: input })
+                body: JSON.stringify({
+                    message: input,
+                    history: messages.map(m => ({ role: m.role, content: m.content })),
+                    today: new Date().toLocaleDateString('en-CA')  // local YYYY-MM-DD
+                })
             })
 
+            if (!response.ok) throw new Error('Request failed')
             const data = await response.json()
-            const assistantMessage = { role: 'assistant', content: data.reply }
+            const assistantMessage = { role: 'assistant', content: data.reply, actions: data.actions || [] }
             setMessages(prev => [...prev, assistantMessage])
         } catch (error) {
             setMessages(prev => [...prev, {
@@ -47,14 +57,16 @@ function Chat() {
 
                 <div className="p-4 border-b border-slate-200">
                     <h2 className="text-lg font-semibold text-blue-700">Expense Assistant</h2>
-                    <p className="text-xs text-slate-500">Ask questions about your expenses</p>
+                    <p className="text-xs text-slate-500">Ask questions, or add expenses, income and debts by chatting</p>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
                     {messages.length === 0 && (
                         <div className="text-center text-slate-400 text-sm mt-8">
-                            <p>Ask me anything about your expenses!</p>
-                            <p className="mt-2">e.g. "What did I spend in July?" or "Which category has the most expenses?"</p>
+                            <p>Ask me anything, or tell me what to record!</p>
+                            <p className="mt-2">e.g. "What did I spend in July?"</p>
+                            <p className="mt-1">"I spent $45 on groceries today"</p>
+                            <p className="mt-1">"I got paid $3000 salary" or "I owe Ravi $200"</p>
                         </div>
                     )}
                     {messages.map((msg, index) => (
@@ -64,11 +76,20 @@ function Chat() {
                                     : 'bg-slate-100 text-slate-800'
                                 }`}>
                                 {msg.role === 'assistant' ? (
-                                    <ReactMarkdown className="prose prose-sm max-w-none">
-                                        {msg.content}
-                                    </ReactMarkdown>
+                                    <div className="prose prose-sm max-w-none">
+                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                    </div>
                                 ) : (
                                     msg.content
+                                )}
+                                {msg.actions && msg.actions.length > 0 && (
+                                    <div className="mt-2 flex flex-col gap-1">
+                                        {msg.actions.map((a, i) => (
+                                            <span key={i} className="text-xs bg-emerald-100 text-emerald-800 rounded px-2 py-1">
+                                                ✓ {a.text}
+                                            </span>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -80,15 +101,16 @@ function Chat() {
                             </div>
                         </div>
                     )}
+                    <div ref={bottomRef} />
                 </div>
 
                 <div className="p-4 border-t border-slate-200 flex gap-2">
                     <input
                         type="text"
-                        placeholder="Ask about your expenses..."
+                        placeholder="Ask a question or add an entry..."
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
+                        onKeyDown={handleKeyPress}
                         className="flex-1 border border-slate-200 rounded px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
